@@ -16,7 +16,7 @@ const toolInputSchema = {
   profile: z.string().optional().describe("Override SCW_PROFILE for this call."),
   output: z.enum(["json", "human", "yaml"]).optional().describe("Output format. Default: json."),
   help: z.boolean().optional().describe("If true, runs '<cmd> --help' and returns help text."),
-  confirm: z.boolean().optional().describe("Required (true) for destructive verbs: delete, terminate, destroy, purge, detach, remove, or --force*."),
+  confirm: z.boolean().optional().describe("Required (true) for destructive verbs (delete, terminate, destroy, purge, detach, remove) or destructive flags (--force*, --recursive, -r)."),
 };
 
 async function main() {
