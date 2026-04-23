@@ -37,62 +37,71 @@ async function main() {
       description,
       toolInputSchema,
       async ({ args, profile, output, help, confirm }) => {
-        // Read-only gate (help bypasses)
-        if (!help) {
-          const ro = checkReadonly(args, config.readonly);
-          if (!ro.allowed) {
+        try {
+          // Read-only gate (help bypasses)
+          if (!help) {
+            const ro = checkReadonly(args, config.readonly);
+            if (!ro.allowed) {
+              return {
+                content: [{ type: "text", text: JSON.stringify({ error: ro.reason, command: `scw ${svc.name} ${args.join(" ")}` }, null, 2) }],
+                isError: true,
+              };
+            }
+          }
+
+          // Destructive confirm (help bypasses)
+          if (!help && isDestructive(args) && confirm !== true) {
+            const preview = `scw ${svc.name} ${args.join(" ")}${profile ? ` --profile ${profile}` : config.profile ? ` --profile ${config.profile}` : ""}`;
             return {
-              content: [{ type: "text", text: JSON.stringify({ error: ro.reason, command: `scw ${svc.name} ${args.join(" ")}` }, null, 2) }],
+              content: [{
+                type: "text",
+                text: JSON.stringify({
+                  error: "Destructive command requires confirm:true",
+                  resolvedCommand: preview,
+                  hint: "Re-call the same tool with the identical args plus confirm:true to execute.",
+                }, null, 2),
+              }],
               isError: true,
             };
           }
-        }
 
-        // Destructive confirm (help bypasses)
-        if (!help && isDestructive(args) && confirm !== true) {
-          const preview = `scw ${svc.name} ${args.join(" ")}${profile ? ` --profile ${profile}` : config.profile ? ` --profile ${config.profile}` : ""}`;
+          // env.output is a RunEnv-required fallback but input.output always resolves first in this bootstrap
+          const result = await runScw(
+            {
+              service: svc.name,
+              args,
+              profile,
+              output: output ?? "json",
+              help,
+            },
+            {
+              binary: config.binary,
+              profile: config.profile,
+              output: "json",
+              timeoutMs: config.timeoutMs,
+              maxBytes: config.maxBytes,
+              maxLines: config.maxLines,
+            }
+          );
+
+          const payload = {
+            command: result.command,
+            exitCode: result.exitCode,
+            truncated: result.truncated,
+            stdout: result.stdout,
+            stderr: result.stderr,
+          };
           return {
-            content: [{
-              type: "text",
-              text: JSON.stringify({
-                error: "Destructive command requires confirm:true",
-                resolvedCommand: preview,
-                hint: "Re-call the same tool with the identical args plus confirm:true to execute.",
-              }, null, 2),
-            }],
+            content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+            isError: false,
+          };
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text", text: JSON.stringify({ error: "unexpected error", detail: msg }, null, 2) }],
             isError: true,
           };
         }
-
-        const result = await runScw(
-          {
-            service: svc.name,
-            args,
-            profile,
-            output: (output ?? "json") as OutputFormat,
-            help,
-          },
-          {
-            binary: config.binary,
-            profile: config.profile,
-            output: "json",
-            timeoutMs: config.timeoutMs,
-            maxBytes: config.maxBytes,
-            maxLines: config.maxLines,
-          }
-        );
-
-        const payload = {
-          command: result.command,
-          exitCode: result.exitCode,
-          truncated: result.truncated,
-          stdout: result.stdout,
-          stderr: result.stderr,
-        };
-        return {
-          content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
-          isError: result.exitCode !== 0,
-        };
       }
     );
   }
