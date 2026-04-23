@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { isDestructive } from "./safety.js";
 import { truncateOutput } from "./truncate.js";
 
 export type OutputFormat = "json" | "human" | "yaml";
@@ -23,9 +24,12 @@ export function buildArgs(input: BuildArgsInput): string[] {
     out.push("--output", input.output);
   }
 
-  const hasAssume = out.some((a) => a === "-y" || a === "--assume-yes");
-  if (!hasAssume) {
-    out.push("--assume-yes");
+  // scw only accepts --assume-yes on destructive subcommands; injecting it on reads errors.
+  if (isDestructive(input.userArgs)) {
+    const hasAssume = out.some((a) => a === "-y" || a === "--assume-yes");
+    if (!hasAssume) {
+      out.push("--assume-yes");
+    }
   }
 
   return out;

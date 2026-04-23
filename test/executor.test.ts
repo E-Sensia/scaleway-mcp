@@ -3,7 +3,7 @@ import type { ExecutorDeps } from "../src/executor.js";
 import { runScw, buildArgs } from "../src/executor.js";
 
 describe("buildArgs", () => {
-  it("prepends service and appends defaults", () => {
+  it("prepends service and appends defaults (read command, no --assume-yes)", () => {
     const out = buildArgs({
       service: "instance",
       userArgs: ["server", "list"],
@@ -18,8 +18,27 @@ describe("buildArgs", () => {
       "prod",
       "--output",
       "json",
-      "--assume-yes",
     ]);
+  });
+
+  it("injects --assume-yes for destructive commands", () => {
+    const out = buildArgs({
+      service: "instance",
+      userArgs: ["server", "delete", "abc"],
+      profile: undefined,
+      output: "json",
+    });
+    expect(out).toContain("--assume-yes");
+  });
+
+  it("does not inject --assume-yes for non-destructive commands", () => {
+    const out = buildArgs({
+      service: "account",
+      userArgs: ["project", "list"],
+      profile: undefined,
+      output: "json",
+    });
+    expect(out).not.toContain("--assume-yes");
   });
 
   it("does not add --profile when unset", () => {
@@ -120,7 +139,7 @@ describe("runScw", () => {
     );
     expect(res.exitCode).toBe(0);
     expect(res.stdout).toBe("ok");
-    expect(res.command).toBe("scw instance server list --output json --assume-yes");
+    expect(res.command).toBe("scw instance server list --output json");
     expect(res.truncated).toBe(false);
   });
 
