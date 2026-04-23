@@ -26,7 +26,7 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
   }
 
   return {
-    profile: env.SCW_PROFILE || undefined,
+    profile: env.SCW_PROFILE?.trim() || undefined,
     readonly: parseBool(env.SCW_MCP_READONLY),
     minVersion: env.SCW_MIN_VERSION || "2.55.0",
     timeoutMs,

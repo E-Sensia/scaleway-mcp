@@ -42,4 +42,24 @@ describe("parseConfig", () => {
   it("overrides binary path", () => {
     expect(parseConfig({ SCW_BINARY: "/usr/local/bin/scw" }).binary).toBe("/usr/local/bin/scw");
   });
+
+  it("throws on zero timeout", () => {
+    expect(() => parseConfig({ SCW_TIMEOUT_MS: "0" })).toThrow(/SCW_TIMEOUT_MS/);
+  });
+
+  it("throws on negative timeout", () => {
+    expect(() => parseConfig({ SCW_TIMEOUT_MS: "-1" })).toThrow(/SCW_TIMEOUT_MS/);
+  });
+
+  it("throws on Infinity timeout", () => {
+    expect(() => parseConfig({ SCW_TIMEOUT_MS: "Infinity" })).toThrow(/SCW_TIMEOUT_MS/);
+  });
+
+  it("returns undefined profile when SCW_PROFILE is whitespace-only", () => {
+    expect(parseConfig({ SCW_PROFILE: "   " }).profile).toBeUndefined();
+  });
+
+  it("returns undefined profile when SCW_PROFILE is empty", () => {
+    expect(parseConfig({ SCW_PROFILE: "" }).profile).toBeUndefined();
+  });
 });
