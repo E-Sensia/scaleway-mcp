@@ -1,0 +1,48 @@
+export type ServiceMeta = {
+  name: string;        // CLI service name, also MCP tool suffix (scw_<name>)
+  description: string; // one-line purpose, shown in tool description
+  resources: string;   // comma-separated list of top-level resources under the service
+};
+
+export const SERVICES: ServiceMeta[] = [
+  { name: "account", description: "Scaleway Projects management", resources: "project, contract, qualification" },
+  { name: "apple-silicon", description: "Apple silicon bare-metal servers", resources: "server, os, type" },
+  { name: "audit-trail", description: "Organization audit-trail events", resources: "event, product" },
+  { name: "baremetal", description: "Elastic Metal servers", resources: "server, offer, option, os, setting, partitioning, private-network" },
+  { name: "billing", description: "Billing and consumption", resources: "consumption, invoice, discount" },
+  { name: "block", description: "Block Storage volumes", resources: "volume, snapshot, volume-type" },
+  { name: "cockpit", description: "Cockpit metrics, logs, alerts, and grafana users", resources: "cockpit, grafana-user, token, alert-manager, datasource, plan, contact-point" },
+  { name: "container", description: "Serverless Containers", resources: "namespace, container, cron, domain, token, trigger" },
+  { name: "datalab", description: "Apache Spark Data Lab", resources: "cluster" },
+  { name: "datawarehouse", description: "Managed Data Warehouse", resources: "deployment, user" },
+  { name: "dns", description: "DNS zones and records", resources: "zone, record, domain, tsig-key, version, dnssec" },
+  { name: "edge-services", description: "Edge Services pipelines and caching", resources: "pipeline, route-stage, tls-stage, cache-stage, backend-stage, purge-request, plan" },
+  { name: "fip", description: "Elastic Metal flexible public IPs", resources: "ip" },
+  { name: "function", description: "Function as a Service", resources: "namespace, function, cron, domain, token, trigger, runtime" },
+  { name: "iam", description: "Identity and Access Management", resources: "user, group, application, policy, rule, api-key, permission-set, ssh-key, jwt, log" },
+  { name: "inference", description: "Managed Inference services", resources: "deployment, model, acl" },
+  { name: "instance", description: "CPU/GPU Instances (VMs)", resources: "server, volume, snapshot, image, ip, placement-group, security-group, ssh-key, user-data, private-nic" },
+  { name: "interlink", description: "InterLink services", resources: "link, partner, pop, routing-policy" },
+  { name: "iot", description: "IoT hubs and devices", resources: "hub, device, route, network, twin" },
+  { name: "ipam", description: "IP Address Management", resources: "ip, attachment" },
+  { name: "jobs", description: "Serverless Jobs", resources: "definition, run" },
+  { name: "k8s", description: "Kubernetes Kapsule and Kosmos clusters", resources: "cluster, pool, node, version, acl" },
+  { name: "keymanager", description: "Key Manager", resources: "key, alias, usage" },
+  { name: "lb", description: "Load Balancers", resources: "lb, ip, backend, frontend, certificate, acl, route, subscriber" },
+  { name: "marketplace", description: "Marketplace images for Instances", resources: "image, local-image, version, category" },
+  { name: "mnq", description: "Messaging and Queuing (NATS, SQS/SNS, Events)", resources: "nats, sqs, sns, sns-topic, sns-subscription, events" },
+  { name: "mongodb", description: "Managed MongoDB Databases", resources: "instance, user, snapshot, node-type, version" },
+  { name: "object", description: "Object storage utilities", resources: "bucket, config" },
+  { name: "rdb", description: "Managed PostgreSQL and MySQL", resources: "instance, database, user, privilege, acl, backup, log, read-replica, node-type, engine, snapshot" },
+  { name: "redis", description: "Managed Redis Databases", resources: "cluster, version, node-type, acl, endpoint, certificate" },
+  { name: "registry", description: "Container Registry", resources: "namespace, image, tag" },
+  { name: "s2s-vpn", description: "Site-to-Site VPN", resources: "gateway, peer, route, connection" },
+  { name: "sdb-sql", description: "Serverless SQL Databases", resources: "database" },
+  { name: "searchdb", description: "Cloud Essentials for Opensearch", resources: "cluster" },
+  { name: "secret", description: "Secret Manager", resources: "secret, version, folder, tag" },
+  { name: "tem", description: "Transactional Email", resources: "email, domain, webhook, project" },
+  { name: "vpc", description: "Virtual Private Clouds and Private Networks", resources: "vpc, private-network, subnet, route" },
+  { name: "vpc-gw", description: "VPC Public Gateways", resources: "gateway, gateway-network, ip, dhcp, dhcp-entry, pat-rule" },
+  { name: "webhosting", description: "cPanel and WordPress Web Hosting", resources: "backup" },
+  { name: "file", description: "File Storage", resources: "filesystem" },
+];
