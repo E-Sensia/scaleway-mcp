@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { ExecutorDeps } from "../src/executor.js";
 import { runScw, buildArgs } from "../src/executor.js";
 
@@ -64,6 +64,28 @@ describe("buildArgs", () => {
       output: "json",
     });
     expect(out.filter((a) => a === "--assume-yes" || a === "-y")).toEqual(["-y"]);
+  });
+
+  it("detects equals-form --output= and --profile= overrides", () => {
+    const outOutput = buildArgs({
+      service: "instance",
+      userArgs: ["server", "list", "--output=yaml"],
+      profile: undefined,
+      output: "json",
+    });
+    expect(outOutput.filter((a) => a === "--output" || a.startsWith("--output=")).length).toBe(1);
+    expect(outOutput).toContain("--output=yaml");
+    expect(outOutput).not.toContain("json"); // our "json" default must not have been injected as a separate value
+
+    const outProfile = buildArgs({
+      service: "instance",
+      userArgs: ["server", "list", "--profile=override"],
+      profile: "default",
+      output: "json",
+    });
+    expect(outProfile.filter((a) => a === "--profile" || a.startsWith("--profile=")).length).toBe(1);
+    expect(outProfile).toContain("--profile=override");
+    expect(outProfile).not.toContain("default");
   });
 });
 
@@ -160,5 +182,28 @@ describe("runScw", () => {
     );
     expect(res.exitCode).toBe(1);
     expect(res.stderr).toContain("permission denied");
+  });
+
+  it("per-call profile overrides env.profile", async () => {
+    const calls: string[][] = [];
+    const d = deps(async (_bin, args) => {
+      calls.push([...args]);
+      return { stdout: "", stderr: "" };
+    });
+    await runScw(
+      { service: "instance", args: ["server", "list"], profile: "per-call" },
+      {
+        binary: "scw",
+        profile: "env-default",
+        output: "json",
+        timeoutMs: 60000,
+        maxBytes: 50000,
+        maxLines: 500,
+      },
+      d
+    );
+    const args = calls[0]!;
+    const idx = args.indexOf("--profile");
+    expect(args[idx + 1]).toBe("per-call");
   });
 });
