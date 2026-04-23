@@ -14,21 +14,19 @@ export function truncateOutput(input: string, opts: TruncateOptions): TruncateRe
   let truncated = false;
   let text = input;
 
-  // line limit
   const lines = text.split("\n");
-  if (lines.length > opts.maxLines) {
+  // A trailing newline produces a final empty element that shouldn't count toward the line limit.
+  const effectiveLines = lines.length > 0 && lines[lines.length - 1] === "" ? lines.length - 1 : lines.length;
+  if (effectiveLines > opts.maxLines) {
     text = lines.slice(0, opts.maxLines).join("\n");
     truncated = true;
   }
 
-  // byte limit — use TextEncoder to count bytes, then walk back to a char boundary
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(text);
+  const bytes = new TextEncoder().encode(text);
   if (bytes.length > opts.maxBytes) {
-    // Decode the first `maxBytes` bytes, stopping at the last complete UTF-8 char.
     let cut = opts.maxBytes;
-    // decode in fatal mode to find the largest prefix that is valid UTF-8
-    while (cut > 0) {
+    // cut === 0 decodes cleanly to "" in fatal mode — so include 0 in the walk-back range.
+    while (cut >= 0) {
       try {
         text = new TextDecoder("utf-8", { fatal: true }).decode(bytes.slice(0, cut));
         break;
