@@ -84,7 +84,8 @@ jobs:
         run: npm version "${{ steps.ver.outputs.version }}" --no-git-tag-version --allow-same-version
 
       - name: Publish to npm (OIDC trusted publishing)
-        run: npm publish --access public --tag "${{ steps.ver.outputs.dist_tag }}" --provenance
+        # TODO: add --provenance once the source repo is public (requirement of npm provenance).
+        run: npm publish --access public --tag "${{ steps.ver.outputs.dist_tag }}"
 
       - name: Create git tag (main only)
         if: github.ref_name == 'main'
