@@ -1,5 +1,8 @@
 # scaleway-mcp
 
+[![npm](https://img.shields.io/npm/v/@e-sensia/scaleway-mcp/next?label=npm%20%40next&logo=npm)](https://www.npmjs.com/package/@e-sensia/scaleway-mcp)
+[![license](https://img.shields.io/npm/l/@e-sensia/scaleway-mcp.svg)](LICENSE)
+
 An MCP server that exposes the [Scaleway CLI](https://github.com/scaleway/scaleway-cli) (`scw`) as tools. One tool per top-level service, each a scoped executor wrapping the CLI.
 
 ## Prerequisites
@@ -12,16 +15,14 @@ An MCP server that exposes the [Scaleway CLI](https://github.com/scaleway/scalew
 
 You have two options. Pick whichever matches how you want to run the server.
 
-### Option A — Run directly from GitHub via `npx` (recommended, zero local clone)
+### Option A — Run from npm via `npx` (recommended, zero local clone)
 
-`npx` clones the repo to a cache dir, runs `npm install` (which triggers the `prepare` script to build `dist/`), and executes the `bin` entry. You never manage the source tree yourself.
+`npx` downloads `@e-sensia/scaleway-mcp` from the npm registry and executes the `bin` entry. You never manage the source tree yourself.
 
 ```bash
 # One-off smoke test — prints the startup log and lists tools
-npx -y github:e-sensia/scaleway-mcp
+npx -y @e-sensia/scaleway-mcp@next
 ```
-
-Replace `e-sensia/scaleway-mcp` with your fork or the canonical repo path if different.
 
 Claude Code `settings.json` using the npx form:
 
@@ -30,14 +31,14 @@ Claude Code `settings.json` using the npx form:
   "mcpServers": {
     "scaleway-readonly": {
       "command": "npx",
-      "args": ["-y", "github:e-sensia/scaleway-mcp"],
+      "args": ["-y", "@e-sensia/scaleway-mcp"],
       "env": {
         "SCW_MCP_READONLY": "true"
       }
     },
     "scaleway-writable": {
       "command": "npx",
-      "args": ["-y", "github:e-sensia/scaleway-mcp"],
+      "args": ["-y", "@e-sensia/scaleway-mcp"],
       "env": {
         "SCW_MCP_READONLY": "false"
       }
@@ -48,8 +49,8 @@ Claude Code `settings.json` using the npx form:
 
 Notes:
 - `-y` auto-confirms the install prompt.
-- First launch clones + builds (a few seconds). Subsequent launches hit the npx cache and start immediately.
-- To pin a revision: `github:e-sensia/scaleway-mcp#<commit-or-tag>`. Recommended for stable environments — otherwise npx resolves to the latest on the default branch.
+- First launch downloads + caches the package. Subsequent launches hit the npx cache and start immediately.
+- Dist-tags: `@next` tracks release candidates from `develop`; `@latest` tracks stable releases from `main`. Pin a specific version with `@e-sensia/scaleway-mcp@0.1.0-rc.1`.
 - `scw` still needs to be on PATH in the environment that runs the MCP. `npx` does not install the Scaleway CLI for you.
 - `SCW_PROFILE` is omitted above — the MCP will use the default scw profile. Add it (e.g. `"SCW_PROFILE": "echo-prod"`) only if you have named profiles configured in `~/.config/scw/config.yaml`. See [Multi-project setups](#multi-project-setups).
 

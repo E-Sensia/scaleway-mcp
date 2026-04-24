@@ -2,6 +2,7 @@
   "name": "@e-sensia/scaleway-mcp",
   "version": "0.1.0",
   "description": "MCP server that exposes the Scaleway CLI as tools.",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -12,7 +13,8 @@
   },
   "files": [
     "dist/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
