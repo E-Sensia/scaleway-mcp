@@ -1,0 +1,101 @@
+name: Publish
+
+on:
+  push:
+    # branches: [main, develop]
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Compute publish version
+        id: ver
+        env:
+          REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          PKG_NAME=$(node -p "require('./package.json').name")
+          BASE=$(node -p "require('./package.json').version")
+
+          case "$BASE" in
+            *-*)
+              echo "::error::package.json version must be a clean x.y.z (no prerelease suffix). Got: $BASE"
+              exit 1
+              ;;
+          esac
+
+          STABLE_EXISTS=$(npm view "$PKG_NAME@$BASE" version 2>/dev/null || true)
+
+          if [ "$REF" = "main" ]; then
+            if [ -n "$STABLE_EXISTS" ]; then
+              echo "::error::Version $BASE is already published on npm. Bump package.json (npm version patch|minor|major) before merging to main."
+              exit 1
+            fi
+            VERSION="$BASE"
+            DIST_TAG="latest"
+          else
+            if [ -n "$STABLE_EXISTS" ]; then
+              echo "::error::Stable $BASE is already published. Bump package.json on develop to start a new rc stream."
+              exit 1
+            fi
+
+            npm view "$PKG_NAME" versions --json > /tmp/versions.json 2>/dev/null || echo '[]' > /tmp/versions.json
+
+            N=$(BASE="$BASE" node -e '
+              const fs = require("fs");
+              const raw = JSON.parse(fs.readFileSync("/tmp/versions.json", "utf8"));
+              const vs = Array.isArray(raw) ? raw : [raw];
+              const base = process.env.BASE.replace(/\./g, "\\.");
+              const re = new RegExp("^" + base + "-rc\\.(\\d+)$");
+              const nums = vs.map(v => { const m = re.exec(v); return m ? Number(m[1]) : -1; });
+              console.log(Math.max(-1, ...nums) + 1);
+            ')
+
+            VERSION="${BASE}-rc.${N}"
+            DIST_TAG="next"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "dist_tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Publishing $PKG_NAME@$VERSION with --tag $DIST_TAG"
+
+      - name: Apply version to package.json
+        run: npm version "${{ steps.ver.outputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag "${{ steps.ver.outputs.dist_tag }}" --provenance
+
+      - name: Create git tag (main only)
+        if: github.ref_name == 'main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="v${{ steps.ver.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
