@@ -106,9 +106,16 @@ async function main() {
     );
   }
 
+  process.stdin.resume();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write(`[scaleway-mcp] ready — ${SERVICES.length} tools registered\n`);
+  // Block until stdin closes so the event loop stays alive on Windows when
+  // spawned via npx (npx closes its own stdin handle early, draining the loop).
+  await new Promise<void>((resolve) => {
+    process.stdin.on("close", resolve);
+    process.stdin.on("end", resolve);
+  });
 }
 
 main().catch((err) => {
