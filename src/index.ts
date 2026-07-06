@@ -110,11 +110,13 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write(`[scaleway-mcp] ready — ${SERVICES.length} tools registered\n`);
-  // Block until stdin closes so the event loop stays alive on Windows when
-  // spawned via npx (npx closes its own stdin handle early, draining the loop).
+  // Keep the event loop alive until the MCP client disconnects.
+  // On Windows, npx closes its stdin handle before the child starts, so we
+  // cannot rely on stdin staying open. Instead we park on a timer that the
+  // transport's onclose handler clears when the session ends.
   await new Promise<void>((resolve) => {
-    process.stdin.on("close", resolve);
-    process.stdin.on("end", resolve);
+    const keepAlive = setInterval(() => {}, 10_000);
+    transport.onclose = () => { clearInterval(keepAlive); resolve(); };
   });
 }
 
